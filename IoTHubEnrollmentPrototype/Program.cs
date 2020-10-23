@@ -232,7 +232,7 @@ namespace IoTHubEnrollmentPrototype
         @"{
                 properties: {
                     desired: {
-                      updater: '2.0.2',
+                      updater: '2.0.5',
                       link: 'https://xxxx'
                     }
                 }
