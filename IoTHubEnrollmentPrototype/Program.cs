@@ -16,13 +16,17 @@ namespace IoTHubEnrollmentPrototype
     private const string IoTHubConnectionString = "";
     private const string GlobalDeviceEndpoint = "";
     private const string IdScope = "";
-    private const string RegisteredId = "";
+    private const string RegisteredId = "dps-iot-demo-001";
 
     static async Task Main(string[] args)
     {
-      var response = await EnrollToIoTHubAsync(RegisteredId);
-      Console.WriteLine(response.PrimaryKey);
-      Console.WriteLine(response.SecondKey);
+      // enroll to IoTHub
+      //var response = await EnrollToIoTHubAsync(RegisteredId);
+      //Console.WriteLine(response.PrimaryKey);
+      //Console.WriteLine(response.SecondKey);
+
+      // update twins
+      //await UpdateDesiredProperties(RegisteredId);
     }
 
     #region Enroll to IoTHub
@@ -213,6 +217,28 @@ namespace IoTHubEnrollmentPrototype
         sBuilder.Append(t.ToString("x2"));
       }
       return sBuilder.ToString();
+    }
+
+    #endregion
+
+    #region Update twins
+
+    public static async Task UpdateDesiredProperties(string deviceId)
+    {
+      var registryManager = RegistryManager.CreateFromConnectionString(IoTHubConnectionString);
+      var twin = await registryManager.GetTwinAsync(deviceId).ConfigureAwait(false);
+
+      var patch =
+        @"{
+                properties: {
+                    desired: {
+                      updater: '2.0.2',
+                      link: 'https://xxxx'
+                    }
+                }
+            }";
+
+      await registryManager.UpdateTwinAsync(twin.DeviceId, patch, twin.ETag).ConfigureAwait(false);
     }
 
     #endregion
