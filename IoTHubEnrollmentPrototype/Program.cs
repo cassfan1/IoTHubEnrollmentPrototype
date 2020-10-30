@@ -7,6 +7,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.Devices.Client;
 
 namespace IoTHubEnrollmentPrototype
 {
@@ -14,9 +15,10 @@ namespace IoTHubEnrollmentPrototype
   {
     private const string ProvisionConnString = "";
     private const string IoTHubConnectionString = "";
-    private const string GlobalDeviceEndpoint = "";
-    private const string IdScope = "";
-    private const string RegisteredId = "dps-iot-demo-001";
+    private const string GlobalDeviceEndpoint = "global.azure-devices-provisioning.net";
+    private const string IdScope = "0ne0017C6F7";
+    private const string RegisteredId = "dps-iot-demo-002";
+    private const string DeviceConnectionString = "";
 
     static async Task Main(string[] args)
     {
@@ -25,8 +27,11 @@ namespace IoTHubEnrollmentPrototype
       //Console.WriteLine(response.PrimaryKey);
       //Console.WriteLine(response.SecondKey);
 
-      // update twins
+      // update desired twins
       //await UpdateDesiredProperties(RegisteredId);
+
+      // update reported twins
+      //await UpdateReportedProperties();
     }
 
     #region Enroll to IoTHub
@@ -232,13 +237,25 @@ namespace IoTHubEnrollmentPrototype
         @"{
                 properties: {
                     desired: {
-                      updater: '2.0.5',
+                      updater: '2.0.7',
                       link: 'https://xxxx'
                     }
                 }
             }";
 
       await registryManager.UpdateTwinAsync(twin.DeviceId, patch, twin.ETag).ConfigureAwait(false);
+    }
+
+    public static async Task UpdateReportedProperties()
+    {
+      var deviceClient = DeviceClient.CreateFromConnectionString(DeviceConnectionString);
+
+      var reportedProperties = new TwinCollection
+      {
+        ["IsRenewKeySuc"] = true,
+        ["IsRenewKeySucDateTime"] = DateTime.Now,
+      };
+      await deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
     }
 
     #endregion
