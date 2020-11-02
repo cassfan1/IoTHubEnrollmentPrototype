@@ -1,13 +1,14 @@
 ﻿using Microsoft.Azure.Devices;
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Microsoft.Azure.Devices.Shared;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.Devices.Client;
 
 namespace IoTHubEnrollmentPrototype
 {
@@ -32,6 +33,10 @@ namespace IoTHubEnrollmentPrototype
 
       // update reported twins
       //await UpdateReportedProperties();
+
+      // un-enroll
+      //await DeleteBulkIndividualEnrollmentsInDpsAsync(RegisteredId);
+      //await DeleteDeviceInIoTHubAsync(RegisteredId);
     }
 
     #region Enroll to IoTHub
@@ -200,6 +205,31 @@ namespace IoTHubEnrollmentPrototype
       }
 
       return null;
+    }
+
+    #endregion
+
+    #region Unenroll
+
+    private static async Task DeleteBulkIndividualEnrollmentsInDpsAsync(string registeredId)
+    {
+      using var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(ProvisionConnString);
+
+      var individualEnrollment = await provisioningServiceClient.GetIndividualEnrollmentAsync(registeredId);
+      var individualEnrollmentList = new List<IndividualEnrollment> { individualEnrollment };
+
+      var bulkEnrollmentOperationResult = await provisioningServiceClient.RunBulkEnrollmentOperationAsync(
+        BulkOperationMode.Delete,
+        individualEnrollmentList);
+
+      if (!bulkEnrollmentOperationResult.IsSuccessful)
+        throw new Exception("Delete device failed");
+    }
+
+    private static async Task DeleteDeviceInIoTHubAsync(string registeredId)
+    {
+      var registryManager = RegistryManager.CreateFromConnectionString(IoTHubConnectionString);
+      await registryManager.RemoveDeviceAsync(registeredId);
     }
 
     #endregion
